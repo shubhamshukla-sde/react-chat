@@ -4,9 +4,12 @@ import {db} from "../firebase"
 import { AuthContext } from '../context/AuthContext'
 import { ChatContext } from '../context/ChatContext'
 import { Link } from 'react-router-dom'
+import Sidebar from '../components/Sidebar'
+import Chat from '../components/Chat'
 
 const Chats = () => {
     const [chats, setChats] = useState([])
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const {currentUser} = useContext(AuthContext)
     const {dispatch} = useContext(ChatContext)

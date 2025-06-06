@@ -382,3 +382,41 @@
     }
   }
 }
+
+.chat-section {
+    position: relative;
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .toggle-sidebar-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: #e0e4ff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .toggle-sidebar-btn:hover {
+    background: #c7d0ff;
+  }
+  
+  @media (max-width: 600px) {
+    .toggle-sidebar-btn {
+      top: 8px;
+      right: 8px;
+      width: 36px;
+      height: 36px;
+      font-size: 22px;
+    }
+  }
