@@ -2,23 +2,36 @@ name: Deploy to Firebase on Push
 
 on:
   push:
-    branches: [main]
+    branches: [main]  # Triggers on push to 'main' branch
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2 # Remove if not using pnpm
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Optional: Remove if you don't use pnpm
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
         with:
           version: 8
-      - uses: actions/setup-node@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
-      - run: CI=false npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: react-chat-1504b
+          repoToken: '${{ secrets.GITHUB_TOKEN }}' # auto-created by GitHub
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' # Add your JSON key here
+          projectId: react-chat-1504b  # Replace with your actual Firebase project ID
