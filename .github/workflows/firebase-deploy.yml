@@ -1,3 +1,29 @@
+# name: Deploy to Firebase on Push
+
+# on:
+#   push:
+#     branches: [main]
+
+# jobs:
+#   build_and_deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: pnpm/action-setup@v2 # Remove if not using pnpm
+#         with:
+#           version: 8
+#       - uses: actions/setup-node@v4
+#         with:
+#           node-version: 20
+#       - run: npm ci
+#       - run: CI=false npm run build
+#       - uses: FirebaseExtended/action-hosting-deploy@v0
+#         with:
+#           repoToken: '${{ secrets.GITHUB_TOKEN }}'
+#           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+#           projectId: react-chat-1504b
+
+
 name: Deploy to Firebase on Push
 
 on:
@@ -27,7 +53,7 @@ jobs:
         run: npm ci
 
       - name: Build Project
-        run: npm run build
+        run: false npm run build
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
