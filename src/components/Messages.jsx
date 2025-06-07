@@ -12,9 +12,9 @@ const Messages = () => {
     const [currentUserData, setCurrentUserData] = React.useState(null)
     const messagesEndRef = useRef(null)
     const messagesContainerRef = useRef(null)
-    const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, messageId: null })
-    const longPressTimer = useRef(null)
-    const LONG_PRESS_DURATION = 500 // 500ms for long press
+    const [swipeState, setSwipeState] = useState({ isSwiping: false, startX: 0, currentX: 0, messageId: null })
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [messageToDelete, setMessageToDelete] = useState(null)
 
     const scrollToBottom = () => {
         if (messagesContainerRef.current) {
@@ -47,67 +47,70 @@ const Messages = () => {
         }
     }, [data.chatId])
 
-    // Scroll to bottom when messages change
     useEffect(() => {
         scrollToBottom()
     }, [messages])
 
-    // Handle long press
-    const handleMouseDown = (e, messageId) => {
-        if (e.button === 2) return // Ignore right click
-        longPressTimer.current = setTimeout(() => {
-            setContextMenu({
-                show: true,
-                x: e.clientX,
-                y: e.clientY,
-                messageId
-            })
-        }, LONG_PRESS_DURATION)
-    }
-
-    const handleMouseUp = () => {
-        if (longPressTimer.current) {
-            clearTimeout(longPressTimer.current)
-        }
-    }
-
-    const handleMouseLeave = () => {
-        if (longPressTimer.current) {
-            clearTimeout(longPressTimer.current)
-        }
-    }
-
-    // Handle right click
-    const handleContextMenu = (e, messageId) => {
-        e.preventDefault()
-        setContextMenu({
-            show: true,
-            x: e.clientX,
-            y: e.clientY,
+    const handleTouchStart = (e, messageId) => {
+        const touch = e.touches[0]
+        setSwipeState({
+            isSwiping: true,
+            startX: touch.clientX,
+            currentX: touch.clientX,
             messageId
         })
     }
 
-    // Close context menu when clicking outside
-    useEffect(() => {
-        const handleClick = () => setContextMenu({ show: false, x: 0, y: 0, messageId: null })
-        document.addEventListener('click', handleClick)
-        return () => document.removeEventListener('click', handleClick)
-    }, [])
+    const handleTouchMove = (e) => {
+        if (!swipeState.isSwiping) return
+        const touch = e.touches[0]
+        setSwipeState(prev => ({
+            ...prev,
+            currentX: touch.clientX
+        }))
+    }
 
-    // Delete message
-    const handleDeleteMessage = async (messageId) => {
+    const handleTouchEnd = () => {
+        if (!swipeState.isSwiping) return
+        
+        const swipeDistance = swipeState.currentX - swipeState.startX
+        const SWIPE_THRESHOLD = 100 // Minimum distance to trigger delete
+
+        if (swipeDistance < -SWIPE_THRESHOLD) {
+            setMessageToDelete(swipeState.messageId)
+            setShowDeleteConfirm(true)
+        }
+
+        setSwipeState({ isSwiping: false, startX: 0, currentX: 0, messageId: null })
+    }
+
+    const handleDeleteMessage = async () => {
+        if (!messageToDelete) return
+
         try {
-            const messageToDelete = messages.find(m => m.id === messageId)
-            if (!messageToDelete) return
+            const messageToRemove = messages.find(m => m.id === messageToDelete)
+            if (!messageToRemove) return
 
             await updateDoc(doc(db, "chats", data.chatId), {
-                messages: arrayRemove(messageToDelete)
+                messages: arrayRemove(messageToRemove)
             })
-            setContextMenu({ show: false, x: 0, y: 0, messageId: null })
+            setShowDeleteConfirm(false)
+            setMessageToDelete(null)
         } catch (error) {
             console.error('Error deleting message:', error)
             alert('Failed to delete message')
+        }
+    }
+
+    const getSwipeStyle = (messageId) => {
+        if (!swipeState.isSwiping || swipeState.messageId !== messageId) return {}
+        
+        const swipeDistance = swipeState.currentX - swipeState.startX
+        const opacity = Math.min(Math.abs(swipeDistance) / 200, 1)
+        
+        return {
+            transform: `translateX(${swipeDistance}px)`,
+            opacity: 1 - opacity
         }
     }
 
@@ -125,10 +128,10 @@ const Messages = () => {
                 <div 
                     className={`message ${m.senderId === currentUser.uid ? "owner" : ""}`} 
                     key={m.id}
-                    onMouseDown={(e) => handleMouseDown(e, m.id)}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseLeave}
-                    onContextMenu={(e) => handleContextMenu(e, m.id)}
+                    onTouchStart={(e) => handleTouchStart(e, m.id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    style={getSwipeStyle(m.id)}
                 >
                     <div className="messageInfo">
                         <img
@@ -155,23 +158,16 @@ const Messages = () => {
                 </div>
             ))}
             <div ref={messagesEndRef} />
-            
-            {contextMenu.show && (
-                <div 
-                    className="context-menu"
-                    style={{
-                        position: 'fixed',
-                        top: contextMenu.y,
-                        left: contextMenu.x,
-                        zIndex: 1000
-                    }}
-                >
-                    <button 
-                        onClick={() => handleDeleteMessage(contextMenu.messageId)}
-                        className="delete-button"
-                    >
-                        Delete Message
-                    </button>
+
+            {showDeleteConfirm && (
+                <div className="delete-confirm-overlay">
+                    <div className="delete-confirm-modal">
+                        <p>Delete this message?</p>
+                        <div className="delete-confirm-buttons">
+                            <button onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                            <button onClick={handleDeleteMessage} className="delete">Delete</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
