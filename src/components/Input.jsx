@@ -12,6 +12,8 @@ const Input = () => {
     const [text, setText] = useState("")
 
     const handleSend = async () => {
+        if (!text.trim()) return;  // Don't send if text is empty or only whitespace
+        
         await updateDoc(doc(db, "chats", data.chatId),{
             messages: arrayUnion({
                 id: uuid(),
@@ -28,7 +30,7 @@ const Input = () => {
         <div className='input'>
             <input type='text' placeholder='Message' onChange={e=>setText(e.target.value)} value={text}/>
             <div className='send'>
-                <button onClick={handleSend}>Send</button>
+                <button onClick={handleSend} disabled={!text.trim()}>Send</button>
             </div>
         </div>
     )

@@ -6,12 +6,19 @@ import { ChatContext } from '../context/ChatContext'
 
 const Chat = () => {
     const {currentUser} = useContext(AuthContext)
-    const { data } = useContext(ChatContext)
+    const { data, dispatch } = useContext(ChatContext)
+
+    const toggleSidebar = () => {
+        dispatch({ type: "TOGGLE_SIDEBAR" });
+    };
 
     return (
         <div className='chat'>
             <div className='chatInfo'>
                 <span>{data.user.displayName}</span>
+                <button className="toggle-sidebar" onClick={toggleSidebar}>
+                    {data.sidebarVisible ? '◀' : '▶'}
+                </button>
             </div>
             <Messages/>
             <Input />
