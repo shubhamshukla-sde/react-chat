@@ -43,7 +43,6 @@ const Chats = () => {
 
                             // Set up presence listener for each user
                             const presenceUnsub = getUserPresence(chatInfo.userInfo.uid, (status) => {
-                                console.log(`User ${chatInfo.userInfo.uid} status:`, status); // Debug log
                                 setUserPresence(prev => ({
                                     ...prev,
                                     [chatInfo.userInfo.uid]: status
@@ -105,14 +104,16 @@ const Chats = () => {
                         key={chat[0]}
                         onClick={() => handleSelect(chat[1].userInfo)}
                     >
-                        <img 
-                            src={getProfilePicture(chat[1].userInfo, currentUserData)}
-                            alt="" 
-                            onError={handleImageError}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <img 
+                                src={getProfilePicture(chat[1].userInfo, currentUserData)}
+                                alt="" 
+                                onError={handleImageError}
+                            />
+                            <div className={`statusIndicator ${isOnline ? 'online' : 'offline'}`} />
+                        </div>
                         <div className="userChatInfo">
                             <span>{chat[1].userInfo.displayName}</span>
-                            <div className={`statusIndicator ${isOnline ? 'online' : 'offline'}`} />
                         </div>
                     </div>
                 );
