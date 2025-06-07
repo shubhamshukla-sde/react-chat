@@ -3,6 +3,7 @@ import Message from './Message'
 import { ChatContext } from '../context/ChatContext'
 import { onSnapshot } from 'firebase/firestore'
 import {db} from "../firebase"
+import { AuthContext } from '../context/AuthContext'
 import {
     collection,
     query,
@@ -13,12 +14,12 @@ import {
     updateDoc,
     serverTimestamp,
     getDoc
-  } from "firebase/firestore";// now lets find a user
-
+} from "firebase/firestore";
 
 const Messages = () => {
     const [messages, setMessages] = useState([])
     const {data} = useContext(ChatContext)
+    const {currentUser} = useContext(AuthContext)
     const messagesEndRef = useRef(null)
 
     const scrollToBottom = () => {
@@ -27,19 +28,20 @@ const Messages = () => {
 
     useEffect(() => {
         const unSub = onSnapshot(doc(db, "chats", data.chatId), (doc) => {
-            doc.exists() && setMessages(doc.data().messages)
-        })
+            if (doc.exists()) {
+                const newMessages = doc.data().messages;
+                setMessages(newMessages);
+            }
+        });
 
         return () => {
-            unSub()
+            unSub();
         }
-    }, [data.chatId])
+    }, [data.chatId]);
 
     useEffect(() => {
-        scrollToBottom()
-    }, [messages])
-
-    console.log (messages)
+        scrollToBottom();
+    }, [messages]);
 
     return (
         <div className='messages'>

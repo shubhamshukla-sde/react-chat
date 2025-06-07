@@ -10,7 +10,8 @@ export const ChatContextProvider = ({ children }) => {
     const INITIAL_STATE = {
         chatId: "null",
         user: {},
-        sidebarVisible: true
+        sidebarVisible: true,
+        chatVisible: false
     }
 
     const chatReducer = (state, action) => {
@@ -22,11 +23,12 @@ export const ChatContextProvider = ({ children }) => {
                     chatId: currentUser.uid > action.payload.uid
                     ? currentUser.uid + action.payload.uid
                     : action.payload.uid + currentUser.uid,
+                    chatVisible: true
                 };
             case "TOGGLE_SIDEBAR":
                 return {
                     ...state,
-                    sidebarVisible: !state.sidebarVisible
+                    sidebarVisible: action.payload !== undefined ? action.payload : !state.sidebarVisible
                 };
             default:
                 return state;

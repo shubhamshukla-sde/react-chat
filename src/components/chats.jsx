@@ -29,6 +29,7 @@ const Chats = () => {
 
     const handleSelect = (user) => {
         dispatch({type:"CHANGE_USER", payload: user})
+        dispatch({type:"TOGGLE_SIDEBAR", payload: false})
     }
 
     return (
