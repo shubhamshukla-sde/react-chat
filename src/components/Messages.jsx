@@ -1,28 +1,22 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { doc, onSnapshot, getDoc } from "firebase/firestore"
-import { db } from "../firebase"
-import { AuthContext } from "../context/AuthContext"
-import { ChatContext } from "../context/ChatContext"
+import React, { useContext, useEffect, useRef } from 'react'
+import { AuthContext } from '../context/AuthContext'
+import { ChatContext } from '../context/ChatContext'
+import { doc, onSnapshot, getDoc } from 'firebase/firestore'
+import { db } from '../firebase'
 import { getProfilePicture, handleImageError } from '../utils/imageUtils'
 
 const Messages = () => {
-    const [messages, setMessages] = useState([])
     const { data } = useContext(ChatContext)
     const { currentUser } = useContext(AuthContext)
-    const [userData, setUserData] = useState(null)
-    const [currentUserData, setCurrentUserData] = useState(null)
+    const [messages, setMessages] = React.useState([])
+    const [currentUserData, setCurrentUserData] = React.useState(null)
+    const messagesEndRef = useRef(null)
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            if (data.user?.uid) {
-                const userDocRef = doc(db, "users", data.user.uid)
-                const userDocSnap = await getDoc(userDocRef)
-                if (userDocSnap.exists()) {
-                    setUserData(userDocSnap.data())
-                }
-            }
-        }
-
         const fetchCurrentUserData = async () => {
             if (currentUser?.uid) {
                 const userDocRef = doc(db, "users", currentUser.uid)
@@ -32,14 +26,14 @@ const Messages = () => {
                 }
             }
         }
-
-        fetchUserData()
         fetchCurrentUserData()
-    }, [data.user?.uid, currentUser?.uid])
+    }, [currentUser?.uid])
 
     useEffect(() => {
-        const unSub = onSnapshot(doc(db, "chats", data.chatId), (docSnapshot) => {
-            docSnapshot.exists() && setMessages(docSnapshot.data().messages)
+        const unSub = onSnapshot(doc(db, "chats", data.chatId), (doc) => {
+            if (doc.exists()) {
+                setMessages(doc.data().messages)
+            }
         })
 
         return () => {
@@ -47,17 +41,19 @@ const Messages = () => {
         }
     }, [data.chatId])
 
+    // Scroll to bottom when messages change
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages])
+
     return (
-        <div className="messages">
+        <div className="messages" style={{ height: 'calc(100% - 100px)', overflowY: 'auto' }}>
             {messages.map((m) => (
                 <div className={`message ${m.senderId === currentUser.uid ? "owner" : ""}`} key={m.id}>
                     <div className="messageInfo">
-                        <img 
-                            src={getProfilePicture(
-                                m.senderId === currentUser.uid ? currentUserData : userData,
-                                currentUserData
-                            )}
-                            alt="" 
+                        <img
+                            src={getProfilePicture(m.senderId === currentUser.uid ? currentUserData : data.user)}
+                            alt=""
                             onError={handleImageError}
                         />
                     </div>
@@ -69,8 +65,7 @@ const Messages = () => {
                                 alt="" 
                                 style={{ 
                                     maxWidth: '300px', 
-                                    maxHeight: '300px', 
-                                    objectFit: 'contain',
+                                    maxHeight: '300px',
                                     borderRadius: '10px',
                                     marginTop: m.text ? '10px' : '0'
                                 }}
@@ -79,6 +74,7 @@ const Messages = () => {
                     </div>
                 </div>
             ))}
+            <div ref={messagesEndRef} />
         </div>
     )
 }
