@@ -11,9 +11,12 @@ const Messages = () => {
     const [messages, setMessages] = React.useState([])
     const [currentUserData, setCurrentUserData] = React.useState(null)
     const messagesEndRef = useRef(null)
+    const messagesContainerRef = useRef(null)
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
     }
 
     useEffect(() => {
@@ -47,7 +50,15 @@ const Messages = () => {
     }, [messages])
 
     return (
-        <div className="messages" style={{ height: 'calc(100% - 100px)', overflowY: 'auto' }}>
+        <div 
+            ref={messagesContainerRef}
+            className="messages" 
+            style={{ 
+                height: 'calc(100% - 100px)', 
+                overflowY: 'auto',
+                scrollBehavior: 'smooth'
+            }}
+        >
             {messages.map((m) => (
                 <div className={`message ${m.senderId === currentUser.uid ? "owner" : ""}`} key={m.id}>
                     <div className="messageInfo">
