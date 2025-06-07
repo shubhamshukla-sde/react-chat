@@ -4,12 +4,14 @@ import { db } from "../firebase"
 import { AuthContext } from "../context/AuthContext"
 import { ChatContext } from "../context/ChatContext"
 import { getProfilePicture, handleImageError } from '../utils/imageUtils'
+import { getUserPresence } from '../utils/presenceUtils'
 
 const Chats = () => {
     const [chats, setChats] = useState([])
     const { currentUser } = useContext(AuthContext)
-    const { dispatch, data } = useContext(ChatContext)
+    const { dispatch } = useContext(ChatContext)
     const [currentUserData, setCurrentUserData] = useState(null)
+    const [userPresence, setUserPresence] = useState({})
 
     useEffect(() => {
         const fetchCurrentUserData = async () => {
@@ -38,6 +40,16 @@ const Chats = () => {
                             const userDocRef = doc(db, "users", chatInfo.userInfo.uid)
                             const userDocSnap = await getDoc(userDocRef)
                             const userData = userDocSnap.data()
+
+                            // Set up presence listener for each user
+                            const presenceUnsub = getUserPresence(chatInfo.userInfo.uid, (status) => {
+                                console.log(`User ${chatInfo.userInfo.uid} status:`, status); // Debug log
+                                setUserPresence(prev => ({
+                                    ...prev,
+                                    [chatInfo.userInfo.uid]: status
+                                }))
+                            })
+
                             return [
                                 chatId,
                                 {
@@ -45,7 +57,8 @@ const Chats = () => {
                                     userInfo: {
                                         ...chatInfo.userInfo,
                                         ...userData
-                                    }
+                                    },
+                                    presenceUnsub
                                 }
                             ]
                         })
@@ -57,36 +70,53 @@ const Chats = () => {
 
             return () => {
                 unsub()
+                // Clean up presence listeners
+                chats.forEach(([_, chat]) => {
+                    if (chat.presenceUnsub) {
+                        chat.presenceUnsub()
+                    }
+                })
             }
         }
 
         currentUser.uid && getChats()
     }, [currentUser.uid])
 
-    const handleSelect = (u) => {
-        dispatch({ type: "CHANGE_USER", payload: u })
-        // Hide sidebar when a user is selected
-        dispatch({ type: "TOGGLE_SIDEBAR", payload: false })
+    const handleSelect = (user) => {
+        dispatch({ 
+            type: "CHANGE_USER", 
+            payload: user 
+        })
+        dispatch({ 
+            type: "TOGGLE_SIDEBAR", 
+            payload: false 
+        })
     }
 
     return (
         <div className="chats" style={{ height: 'calc(100% - 110px)', overflowY: 'auto' }}>
-            {chats.map((chat) => (
-                <div
-                    className="userChat"
-                    key={chat[0]}
-                    onClick={() => handleSelect(chat[1].userInfo)}
-                >
-                    <img 
-                        src={getProfilePicture(chat[1].userInfo, currentUserData)}
-                        alt="" 
-                        onError={handleImageError}
-                    />
-                    <div className="userChatInfo">
-                        <span>{chat[1].userInfo.displayName}</span>
+            {chats.map((chat) => {
+                const userId = chat[1].userInfo.uid;
+                const isOnline = userPresence[userId] === 'online';
+                
+                return (
+                    <div
+                        className="userChat"
+                        key={chat[0]}
+                        onClick={() => handleSelect(chat[1].userInfo)}
+                    >
+                        <img 
+                            src={getProfilePicture(chat[1].userInfo, currentUserData)}
+                            alt="" 
+                            onError={handleImageError}
+                        />
+                        <div className="userChatInfo">
+                            <span>{chat[1].userInfo.displayName}</span>
+                            <div className={`statusIndicator ${isOnline ? 'online' : 'offline'}`} />
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     )
 }
