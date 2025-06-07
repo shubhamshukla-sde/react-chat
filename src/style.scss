@@ -110,6 +110,7 @@
             gap: 10px;
             color: white;
             cursor: pointer;
+            position: relative;
 
             &:hover {
                 background-color: #2f2d52;
@@ -120,6 +121,32 @@
                 height: 50px;
                 border-radius: 50%;
                 object-fit: cover;
+            }
+
+            .userChatInfo {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+
+                .statusIndicator {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    position: absolute;
+                    top: 10px;
+                    left: 40px;
+                    border: 2px solid #2f2d52;
+
+                    &.online {
+                        background-color: #4CAF50;
+                        animation: blink 2s infinite;
+                    }
+
+                    &.offline {
+                        background-color: #f44336;
+                        animation: blink 2s infinite;
+                    }
+                }
             }
         }
 
@@ -180,26 +207,18 @@
             background-color: #5d5b8d;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 10px;
             color: lightgray;
-            justify-content: space-between;
+        }
 
-            .toggle-sidebar {
-                background: none;
-                border: none;
-                color: lightgray;
+        .chatIcons {
+            display: flex;
+            gap: 10px;
+
+            img {
+                height: 24px;
                 cursor: pointer;
-                font-size: 24px;
-                padding: 5px 10px;
-                border-radius: 5px;
-                transition: background-color 0.2s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-
-                &:hover {
-                    background-color: rgba(255, 255, 255, 0.1);
-                }
             }
         }
 
@@ -593,4 +612,10 @@
             }
         }
     }
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
 }
