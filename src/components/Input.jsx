@@ -28,7 +28,12 @@ const Input = () => {
 
     return (
         <div className='input'>
-            <input type='text' placeholder='Message' onChange={e=>setText(e.target.value)} value={text}/>
+            <input 
+                type='text' 
+                placeholder={data.user.displayName ? `Type a message to ${data.user.displayName}...` : 'Select a user to start chatting...'}
+                onChange={e=>setText(e.target.value)} 
+                value={text}
+            />
             <div className='send'>
                 <button onClick={handleSend} disabled={!text.trim()}>Send</button>
             </div>

@@ -17,7 +17,7 @@ const Chat = () => {
             <div className='chatInfo'>
                 <span>{data.user.displayName}</span>
                 <button className="toggle-sidebar" onClick={toggleSidebar}>
-                    {data.sidebarVisible ? '◀' : '▶'}
+                    {data.sidebarVisible ? '←' : (<><span style={{fontSize: '14px', marginRight: '4px'}}>→</span><span style={{fontSize: '12px'}}>All Users</span></>)}
                 </button>
             </div>
             <Messages/>
