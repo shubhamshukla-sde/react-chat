@@ -1,28 +1,3 @@
-# name: Deploy to Firebase on Push
-
-# on:
-#   push:
-#     branches: [main]
-
-# jobs:
-#   build_and_deploy:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
-#       - uses: pnpm/action-setup@v2 # Remove if not using pnpm
-#         with:
-#           version: 8
-#       - uses: actions/setup-node@v4
-#         with:
-#           node-version: 20
-#       - run: npm ci
-#       - run: CI=false npm run build
-#       - uses: FirebaseExtended/action-hosting-deploy@v0
-#         with:
-#           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-#           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-#           projectId: react-chat-1504b
-
 name: Deploy to Firebase on Push
 
 on:
@@ -32,6 +7,7 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,9 +28,18 @@ jobs:
       - name: Build React project
         run: CI=false npm run build
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting (Production)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: react-chat-1504b
+
+      # Uncomment the following to deploy to a preview channel instead of production
+      # Make sure to create a Firebase token by running `firebase login:ci`
+      # and save it as a GitHub secret named FIREBASE_TOKEN
+
+      - name: Deploy to Firebase Preview Channel (optional)
+        run: npx firebase-tools hosting:channel:deploy staging --expires 7d --project react-chat-1504b
+        env:
+           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
