@@ -1,90 +1,112 @@
-import React, { useState, useEffect, useContext } from 'react'
-import {doc, onSnapshot} from "firebase/firestore"
-import {db} from "../firebase"
-import { AuthContext } from '../context/AuthContext'
-import { ChatContext } from '../context/ChatContext'
-import { Timestamp, arrayUnion, updateDoc } from 'firebase/firestore'
-import {v4 as uuid} from "uuid"
-import { compressImage } from '../utils/imageUpload'
+import React, { useState, useContext } from 'react';
+import { doc, updateDoc, arrayUnion, Timestamp, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
+import { AuthContext } from "../context/AuthContext";
+import { ChatContext } from "../context/ChatContext";
+import { handleEmailMessage } from '../utils/emailUtils';
+import { v4 as uuid } from "uuid";
+import { compressImage } from '../utils/imageUpload';
 
 const Input = () => {
-    const {currentUser} = useContext(AuthContext)
-    const { data } = useContext(ChatContext)
-    const [text, setText] = useState("")
-    const [img, setImg] = useState(null)
-    const [uploading, setUploading] = useState(false)
-    const [previewUrl, setPreviewUrl] = useState(null)
+    const [text, setText] = useState("");
+    const [img, setImg] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState(null);
+
+    const { currentUser } = useContext(AuthContext);
+    const { data } = useContext(ChatContext);
 
     const handleSend = async () => {
-        if (!text.trim() && !img) return
+        if (!text.trim() && !img) return;
 
-        setUploading(true)
+        setUploading(true);
         try {
-            let imageData = null
-            if (img) {
-                imageData = await compressImage(img)
-                if (!imageData) {
-                    throw new Error('Failed to compress image')
+            // Check if it's an email message
+            const isEmailMessage = await handleEmailMessage(text, currentUser, data.chatId, data);
+            
+            if (!isEmailMessage) {
+                let imageData = null;
+                if (img) {
+                    imageData = await compressImage(img);
+                    if (!imageData) {
+                        throw new Error('Failed to compress image');
+                    }
                 }
+
+                const messageData = {
+                    id: uuid(),
+                    text: text.trim(),
+                    senderId: currentUser.uid,
+                    date: Timestamp.now(),
+                };
+
+                if (imageData) {
+                    messageData.img = imageData;
+                }
+
+                // Add message to chat
+                await updateDoc(doc(db, "chats", data.chatId), {
+                    messages: arrayUnion(messageData)
+                });
+
+                // Update last message in userChats
+                await updateDoc(doc(db, "userChats", currentUser.uid), {
+                    [data.chatId + ".lastMessage"]: {
+                        text: text.trim()
+                    },
+                    [data.chatId + ".date"]: serverTimestamp()
+                });
+
+                await updateDoc(doc(db, "userChats", data.user.uid), {
+                    [data.chatId + ".lastMessage"]: {
+                        text: text.trim()
+                    },
+                    [data.chatId + ".date"]: serverTimestamp()
+                });
             }
 
-            const messageData = {
-                id: uuid(),
-                text: text.trim(),
-                senderId: currentUser.uid,
-                date: Timestamp.now(),
-            }
-
-            if (imageData) {
-                messageData.img = imageData
-            }
-
-            await updateDoc(doc(db, "chats", data.chatId), {
-                messages: arrayUnion(messageData)
-            })
-
-            setText("")
-            setImg(null)
-            setPreviewUrl(null)
+            setText("");
+            setImg(null);
+            setPreviewUrl(null);
         } catch (error) {
-            console.error('Error sending message:', error)
-            alert('Failed to send message. Please try again.')
+            console.error("Error sending message:", error);
+            alert('Failed to send message. Please try again.');
         } finally {
-            setUploading(false)
+            setUploading(false);
         }
-    }
+    };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0]
+        const file = e.target.files[0];
         if (file) {
             if (file.size > 1024 * 1024) { // 1MB limit
-                alert('Image size should be less than 1MB')
-                return
+                alert('Image size should be less than 1MB');
+                return;
             }
-            setImg(file)
+            setImg(file);
             // Create preview URL
-            const reader = new FileReader()
+            const reader = new FileReader();
             reader.onloadend = () => {
-                setPreviewUrl(reader.result)
-            }
-            reader.readAsDataURL(file)
+                setPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
-    }
+    };
 
     const removeImage = () => {
-        setImg(null)
-        setPreviewUrl(null)
-    }
+        setImg(null);
+        setPreviewUrl(null);
+    };
 
     return (
-        <div className='input'>
-            <input 
-                type='text' 
+        <div className="input">
+            <input
+                type="text"
                 placeholder={data.user.displayName ? `Type a message to ${data.user.displayName}...` : 'Select a user to start chatting...'}
-                onChange={e=>setText(e.target.value)} 
+                onChange={(e) => setText(e.target.value)}
                 value={text}
             />
-            <div className='send'>
+            <div className="send">
                 {!img && (
                     <input
                         type="file"
@@ -117,7 +139,7 @@ const Input = () => {
                 </button>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Input
+export default Input;
