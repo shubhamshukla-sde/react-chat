@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import Message from './Message'
 import { ChatContext } from '../context/ChatContext'
 import { onSnapshot } from 'firebase/firestore'
@@ -19,6 +19,11 @@ import {
 const Messages = () => {
     const [messages, setMessages] = useState([])
     const {data} = useContext(ChatContext)
+    const messagesEndRef = useRef(null)
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
 
     useEffect(() => {
         const unSub = onSnapshot(doc(db, "chats", data.chatId), (doc) => {
@@ -30,6 +35,10 @@ const Messages = () => {
         }
     }, [data.chatId])
 
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages])
+
     console.log (messages)
 
     return (
@@ -37,6 +46,7 @@ const Messages = () => {
             {messages.map(m => (
                 <Message message={m} key={m.id}/>
             ))}
+            <div ref={messagesEndRef} />
         </div>
     )
 }
