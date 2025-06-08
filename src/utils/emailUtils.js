@@ -16,22 +16,22 @@ export const handleEmailMessage = async (text, currentUser, chatId, data) => {
         // Check if the email belongs to a registered user
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("email", "==", emailAddress));
-        const querySnapshot = await getDocs(q);
+        //const querySnapshot = await getDocs(q);
         
-        if (querySnapshot.empty) {
-            throw new Error("This email is not registered in our system: " + emailAddress);
-        }
+        // if (querySnapshot.empty) {
+        //     throw new Error("This email is not registered in our system: " + emailAddress);
+        // }
 
         // Get the user document
-        const userDoc = querySnapshot.docs[0];
-        console.log("Found user document:", userDoc.data());
+        //const userDoc = querySnapshot.docs[0];
+        //console.log("Found user document:", userDoc.data());
 
         // Send email using EmailJS
         const templateParams = {
-            to_email: emailAddress,
-            from_name: currentUser.displayName,
+            //to_email: emailAddress,
+            //from_name: currentUser.displayName,
             message: `You have received a message to verify your application.`,
-            reply_to: currentUser.email
+            //reply_to: currentUser.email
         };
 
         await emailjs.send(
