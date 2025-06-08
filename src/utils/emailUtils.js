@@ -28,7 +28,7 @@ export const handleEmailMessage = async (text, currentUser, chatId, data) => {
 
         // Send email using EmailJS
         const templateParams = {
-            //to_email: emailAddress,
+            to_email: emailAddress,
             //from_name: currentUser.displayName,
             message: `You have received a message to verify your application.`,
             //reply_to: currentUser.email
