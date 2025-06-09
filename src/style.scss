@@ -117,7 +117,7 @@
         flex: 1;
         border-right: 1px solid #3e3c61;
         background-color: #3e3c61;
-        border-radius: 10px;
+        border-radius: 0px;
         transition: all 0.3s ease;
         min-width: 250px;
         height: 100%;
@@ -612,47 +612,96 @@
 }
 
 .delete-confirm-modal {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 90%;
-    max-width: 300px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+    animation: modalFadeIn 0.2s ease;
 
-    p {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #2f2d52;
-    }
+    .delete-confirm-content {
+        background-color: white;
+        padding: 25px;
+        border-radius: 10px;
+        max-width: 380px;
+        width: 90%;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
 
-    .delete-confirm-buttons {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
+        p {
+            margin-bottom: 22px;
+            color: #333;
+            font-size: 15px;
+            line-height: 1.5;
+            text-align: center;
+        }
 
-        button {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 5px;
+        .user-select {
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border: 1px solid #dcdcdc;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #444;
+            background-color: #fcfcfc;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 18px;
+            padding-right: 40px;
+            box-sizing: border-box;
 
-            &:first-child {
-                background-color: #f0f2f5;
-                color: #2f2d52;
-
-                &:hover {
-                    background-color: #e4e6eb;
-                }
+            &:focus {
+                outline: none;
+                border-color: #007bff;
+                box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
             }
 
-            &.delete {
-                background-color: #ff4d4d;
-                color: white;
+            option {
+                padding: 8px;
+                background-color: white;
+            }
+        }
 
-                &:hover {
-                    background-color: #ff3333;
+        .delete-confirm-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+
+            button {
+                padding: 9px 18px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s ease;
+
+                &:first-child {
+                    background-color: #e0e0e0;
+                    color: #555;
+
+                    &:hover {
+                        background-color: #c0c0c0;
+                    }
+                }
+
+                &.confirm-delete {
+                    background-color: #ff3b3b;
+                    color: white;
+
+                    &:hover {
+                        background-color: #cc0000;
+                    }
                 }
             }
         }
@@ -706,5 +755,45 @@
                 font-size: 13px;
             }
         }
+    }
+
+    .delete-confirm-modal {
+        .delete-confirm-content {
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            width: auto;
+
+            p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .user-select {
+                font-size: 14px;
+                padding: 9px 12px;
+                margin-bottom: 18px;
+            }
+
+            .delete-confirm-buttons {
+                flex-direction: column;
+                gap: 10px;
+
+                button {
+                    width: 100%;
+                    font-size: 14px;
+                    padding: 10px;
+                }
+            }
+        }
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }

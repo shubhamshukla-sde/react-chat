@@ -30,6 +30,11 @@ export const ChatContextProvider = ({ children }) => {
                     ...state,
                     sidebarVisible: action.payload !== undefined ? action.payload : !state.sidebarVisible
                 };
+            case "RESET_CHAT":
+                return {
+                    ...INITIAL_STATE,
+                    sidebarVisible: state.sidebarVisible
+                };
             default:
                 return state;
         }
