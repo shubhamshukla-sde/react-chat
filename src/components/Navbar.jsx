@@ -20,7 +20,7 @@ const Navbar = () => {
 
     return (
         <div className="navbar">
-            <span className="logo">Chat App</span>
+            <span className="logo">Chat Us</span>
             <div className="user">
                 <img src={currentUser.photoURL || 'https://via.placeholder.com/150'} alt="" />
                 <span>{currentUser.displayName}</span>
