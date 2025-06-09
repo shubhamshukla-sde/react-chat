@@ -27,7 +27,7 @@ jobs:
           # If this workflow is manually dispatched and 'deploy_feature_branch' is true,
           # checkout the specified 'branch' input. Otherwise, checkout the branch
           # that originally triggered the workflow (e.g., 'main' for push events).
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_feature_branch == true && github.event.inputs.branch || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_feature_branch == 'true' && github.event.inputs.branch || github.ref }}
 
       - name: Debug Inputs
         run: |
