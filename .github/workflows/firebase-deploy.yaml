@@ -1,9 +1,20 @@
-name: Deploy to Firebase Hosting on merge
+name: Deploy to Firebase Hosting on merge or manually
 
 on:
   push:
     branches:
       - main  # Triggers only on push to main branch
+  workflow_dispatch:
+    inputs:
+      deploy_feature_branch:
+        description: 'Enable to deploy feature branch changes'
+        type: boolean
+        required: false
+        default: false
+      branch:
+        description: 'Feature branch to deploy (e.g., feature/my-new-feature). Only used if "Deploy Feature Branch" is enabled.'
+        type: string
+        required: false
 
 jobs:
   build_and_deploy:
@@ -12,6 +23,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # If this workflow is manually dispatched and 'deploy_feature_branch' is true,
+          # checkout the specified 'branch' input. Otherwise, checkout the branch
+          # that originally triggered the workflow (e.g., 'main' for push events).
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_feature_branch == true && github.event.inputs.branch || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -22,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Build project
-        run: CI=false npm run build  # disables CI warnings that can break the build
+        run: CI=false npm run build
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0

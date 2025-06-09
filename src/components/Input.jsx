@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { doc, updateDoc, arrayUnion, Timestamp, serverTimestamp } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, Timestamp, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
@@ -44,8 +44,17 @@ const Input = () => {
                     messageData.img = imageData;
                 }
 
+                // Check if chat document exists
+                const chatRef = doc(db, "chats", data.chatId);
+                const chatDoc = await getDoc(chatRef);
+
+                if (!chatDoc.exists()) {
+                    // Create new chat document if it doesn't exist
+                    await setDoc(chatRef, { messages: [] });
+                }
+
                 // Add message to chat
-                await updateDoc(doc(db, "chats", data.chatId), {
+                await updateDoc(chatRef, {
                     messages: arrayUnion(messageData)
                 });
 
@@ -73,6 +82,13 @@ const Input = () => {
             alert('Failed to send message. Please try again.');
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent default to avoid new line
+            handleSend();
         }
     };
 
@@ -104,6 +120,7 @@ const Input = () => {
                 type="text"
                 placeholder={data.user.displayName ? `Type a message to ${data.user.displayName}...` : 'Select a user to start chatting...'}
                 onChange={(e) => setText(e.target.value)}
+                onKeyPress={handleKeyPress}
                 value={text}
             />
             <div className="send">
