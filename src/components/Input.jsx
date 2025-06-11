@@ -6,6 +6,8 @@ import { ChatContext } from "../context/ChatContext";
 import { handleEmailMessage } from '../utils/emailUtils';
 import { v4 as uuid } from "uuid";
 import { compressImage } from '../utils/imageUpload';
+import SecretCodeService from '../services/secretCodeService';
+import MessageService from '../services/messageService';
 
 const Input = () => {
     const [text, setText] = useState("");
@@ -21,58 +23,7 @@ const Input = () => {
 
         setUploading(true);
         try {
-            // Check if it's an email message
-            const isEmailMessage = await handleEmailMessage(text, currentUser, data.chatId, data);
-            
-            if (!isEmailMessage) {
-                let imageData = null;
-                if (img) {
-                    imageData = await compressImage(img);
-                    if (!imageData) {
-                        throw new Error('Failed to compress image');
-                    }
-                }
-
-                const messageData = {
-                    id: uuid(),
-                    text: text.trim(),
-                    senderId: currentUser.uid,
-                    date: Timestamp.now(),
-                };
-
-                if (imageData) {
-                    messageData.img = imageData;
-                }
-
-                // Check if chat document exists
-                const chatRef = doc(db, "chats", data.chatId);
-                const chatDoc = await getDoc(chatRef);
-
-                if (!chatDoc.exists()) {
-                    // Create new chat document if it doesn't exist
-                    await setDoc(chatRef, { messages: [] });
-                }
-
-                // Add message to chat
-                await updateDoc(chatRef, {
-                    messages: arrayUnion(messageData)
-                });
-
-                // Update last message in userChats
-                await updateDoc(doc(db, "userChats", currentUser.uid), {
-                    [data.chatId + ".lastMessage"]: {
-                        text: text.trim()
-                    },
-                    [data.chatId + ".date"]: serverTimestamp()
-                });
-
-                await updateDoc(doc(db, "userChats", data.user.uid), {
-                    [data.chatId + ".lastMessage"]: {
-                        text: text.trim()
-                    },
-                    [data.chatId + ".date"]: serverTimestamp()
-                });
-            }
+            await MessageService.sendMessage(data.chatId, currentUser, data.user, text, img);
 
             setText("");
             setImg(null);

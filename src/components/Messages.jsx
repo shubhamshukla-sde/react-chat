@@ -1,9 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import { ChatContext } from '../context/ChatContext'
 import { doc, onSnapshot, getDoc, updateDoc, arrayRemove } from 'firebase/firestore'
 import { db } from '../firebase'
 import { getProfilePicture, handleImageError } from '../utils/imageUtils'
+import SecretCodeService from '../services/secretCodeService'
 
 const Messages = () => {
     const { data } = useContext(ChatContext)
@@ -24,6 +25,22 @@ const Messages = () => {
         }
     }
 
+    const filterMessages = useCallback((allMessages, activeSecretCode) => {
+        if (!allMessages) return [];
+
+        return allMessages.filter(message => {
+            const messageHasSecretCode = message.secretCode !== undefined && message.secretCode !== null;
+
+            if (activeSecretCode) {
+                // If a secret code is active, only show messages with matching secret code
+                return messageHasSecretCode && message.secretCode === activeSecretCode;
+            } else {
+                // If no secret code is active, only show messages without a secret code
+                return !messageHasSecretCode;
+            }
+        });
+    }, []);
+
     useEffect(() => {
         const fetchCurrentUserData = async () => {
             if (currentUser?.uid) {
@@ -38,18 +55,22 @@ const Messages = () => {
     }, [currentUser?.uid])
 
     useEffect(() => {
-        const unSub = onSnapshot(doc(db, "chats", data.chatId), (doc) => {
-            if (doc.exists()) {
-                setMessages(doc.data().messages || [])
+        const unSub = onSnapshot(doc(db, "chats", data.chatId), (docSnapshot) => {
+            const activeSecretCode = SecretCodeService.getSecretCodeFromSession();
+
+            if (docSnapshot.exists()) {
+                const allMessages = docSnapshot.data().messages || [];
+                const filtered = filterMessages(allMessages, activeSecretCode);
+                setMessages(filtered);
             } else {
-                setMessages([])
+                setMessages([]);
             }
-        })
+        });
 
         return () => {
-            unSub()
-        }
-    }, [data.chatId])
+            unSub();
+        };
+    }, [data.chatId, filterMessages]);
 
     useEffect(() => {
         scrollToBottom()

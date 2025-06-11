@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext"
 import { ChatContext } from "../context/ChatContext"
 import { getProfilePicture, handleImageError } from '../utils/imageUtils'
 import { getUserPresence } from '../utils/presenceUtils'
+import SecretCodeService from '../services/secretCodeService'
 
 const Chats = () => {
     const [users, setUsers] = useState([])
@@ -31,9 +32,22 @@ const Chats = () => {
         const getAllUsers = async () => {
             const usersRef = collection(db, "users");
             const querySnapshot = await getDocs(usersRef);
-            const allUsers = querySnapshot.docs
+            let allUsers = querySnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(user => user.id !== currentUser.uid);
+
+            const activeSecretCode = SecretCodeService.getSecretCodeFromSession();
+            console.log("Chats - Active Secret Code from Session:", activeSecretCode);
+
+            allUsers = allUsers.filter(user => {
+                const userHasSecretCode = user.secretCodeHash !== undefined && user.secretCodeHash !== null;
+
+                if (activeSecretCode) {
+                    return userHasSecretCode && user.secretCodeHash === activeSecretCode;
+                } else {
+                    return !userHasSecretCode;
+                }
+            });
 
             setUsers(allUsers);
 
