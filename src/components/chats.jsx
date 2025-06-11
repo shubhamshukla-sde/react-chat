@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { doc, onSnapshot, getDoc } from "firebase/firestore"
+import { doc, onSnapshot, getDoc, collection, getDocs } from "firebase/firestore"
 import { db } from "../firebase"
 import { AuthContext } from "../context/AuthContext"
 import { ChatContext } from "../context/ChatContext"
@@ -7,7 +7,7 @@ import { getProfilePicture, handleImageError } from '../utils/imageUtils'
 import { getUserPresence } from '../utils/presenceUtils'
 
 const Chats = () => {
-    const [chats, setChats] = useState([])
+    const [users, setUsers] = useState([])
     const { currentUser } = useContext(AuthContext)
     const { dispatch } = useContext(ChatContext)
     const [currentUserData, setCurrentUserData] = useState(null)
@@ -28,58 +28,34 @@ const Chats = () => {
     }, [currentUser?.uid])
 
     useEffect(() => {
-        const getChats = () => {
-            const unsub = onSnapshot(doc(db, "userChats", currentUser.uid), async (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const chatData = docSnapshot.data()
-                    const chatArray = Object.entries(chatData).sort((a, b) => b[1].date - a[1].date)
-                    
-                    // Fetch user data for each chat
-                    const updatedChats = await Promise.all(
-                        chatArray.map(async ([chatId, chatInfo]) => {
-                            const userDocRef = doc(db, "users", chatInfo.userInfo.uid)
-                            const userDocSnap = await getDoc(userDocRef)
-                            const userData = userDocSnap.data()
+        const getAllUsers = async () => {
+            const usersRef = collection(db, "users");
+            const querySnapshot = await getDocs(usersRef);
+            const allUsers = querySnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(user => user.id !== currentUser.uid);
 
-                            // Set up presence listener for each user
-                            const presenceUnsub = getUserPresence(chatInfo.userInfo.uid, (status) => {
-                                setUserPresence(prev => ({
-                                    ...prev,
-                                    [chatInfo.userInfo.uid]: status
-                                }))
-                            })
+            setUsers(allUsers);
 
-                            return [
-                                chatId,
-                                {
-                                    ...chatInfo,
-                                    userInfo: {
-                                        ...chatInfo.userInfo,
-                                        ...userData
-                                    },
-                                    presenceUnsub
-                                }
-                            ]
-                        })
-                    )
-                    
-                    setChats(updatedChats)
-                }
-            })
+            const presenceUnsubs = {};
+            allUsers.forEach(user => {
+                const presenceUnsub = getUserPresence(user.id, (status) => {
+                    setUserPresence(prev => ({
+                        ...prev,
+                        [user.id]: status
+                    }));
+                });
+                presenceUnsubs[user.id] = presenceUnsub;
+            });
 
             return () => {
-                unsub()
-                // Clean up presence listeners
-                chats.forEach(([_, chat]) => {
-                    if (chat.presenceUnsub) {
-                        chat.presenceUnsub()
-                    }
-                })
-            }
-        }
+                Object.values(presenceUnsubs).forEach(unsub => unsub());
+            };
+        };
 
-        currentUser.uid && getChats()
-    }, [currentUser.uid])
+        currentUser.uid && getAllUsers();
+
+    }, [currentUser.uid]);
 
     const handleSelect = (user) => {
         dispatch({ 
@@ -94,26 +70,25 @@ const Chats = () => {
 
     return (
         <div className="chats" style={{ height: 'calc(100% - 110px)', overflowY: 'auto' }}>
-            {chats.map((chat) => {
-                const userId = chat[1].userInfo.uid;
-                const isOnline = userPresence[userId] === 'online';
+            {users.map((userItem) => {
+                const isOnline = userPresence[userItem.id] === 'online';
                 
                 return (
                     <div
                         className="userChat"
-                        key={chat[0]}
-                        onClick={() => handleSelect(chat[1].userInfo)}
+                        key={userItem.id}
+                        onClick={() => handleSelect(userItem)}
                     >
                         <div style={{ position: 'relative' }}>
                             <img 
-                                src={getProfilePicture(chat[1].userInfo, currentUserData)}
+                                src={getProfilePicture(userItem, currentUserData)}
                                 alt="" 
                                 onError={handleImageError}
                             />
                             <div className={`statusIndicator ${isOnline ? 'online' : 'offline'}`} />
                         </div>
                         <div className="userChatInfo">
-                            <span>{chat[1].userInfo.displayName}</span>
+                            <span>{userItem.displayName}</span>
                         </div>
                     </div>
                 );

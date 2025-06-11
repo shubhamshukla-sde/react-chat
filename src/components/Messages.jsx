@@ -18,7 +18,9 @@ const Messages = () => {
 
     const scrollToBottom = () => {
         if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+            setTimeout(() => {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }, 0); // Defer scroll to ensure content is rendered and scrollHeight is accurate
         }
     }
 
@@ -38,7 +40,9 @@ const Messages = () => {
     useEffect(() => {
         const unSub = onSnapshot(doc(db, "chats", data.chatId), (doc) => {
             if (doc.exists()) {
-                setMessages(doc.data().messages)
+                setMessages(doc.data().messages || [])
+            } else {
+                setMessages([])
             }
         })
 
@@ -118,11 +122,6 @@ const Messages = () => {
         <div 
             ref={messagesContainerRef}
             className="messages" 
-            style={{ 
-                height: 'calc(100% - 100px)', 
-                overflowY: 'auto',
-                scrollBehavior: 'smooth'
-            }}
         >
             {messages.map((m) => (
                 <div 

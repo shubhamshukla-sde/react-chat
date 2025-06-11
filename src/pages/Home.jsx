@@ -12,7 +12,9 @@ const Home = () => {
                 <div className={`sidebar ${!data.sidebarVisible ? 'hidden' : ''}`}>
                     <Sidebar/>
                 </div>
-                {data.chatVisible && <Chat/>}
+                <div className="main-content">
+                    {data.chatVisible && <Chat/>}
+                </div>
             </div>
         </div>
     )
