@@ -5,14 +5,17 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { AuthContextProvider } from './context/AuthContext';
 import { ChatContextProvider } from './context/ChatContext';
+import { SecretCodeProvider } from './context/SecretCodeContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <AuthContextProvider>
     <ChatContextProvider>
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
+      <SecretCodeProvider>
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      </SecretCodeProvider>
     </ChatContextProvider>
   </AuthContextProvider>
 );
