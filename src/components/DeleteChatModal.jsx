@@ -32,13 +32,16 @@ const DeleteChatModal = ({ onClose }) => {
     const handleDelete = async () => {
         if (!selectedUser) return;
 
+        dispatch({ type: "SET_DELETING", payload: true }); // Set deleting state
+        onClose(); // Close the modal immediately
         try {
             await deleteChatWithUser(currentUser.uid, selectedUser);
             dispatch({ type: "RESET_CHAT" });
-            onClose(); // Close the modal after deletion
         } catch (error) {
             console.error('Error deleting chat:', error);
             alert('Failed to delete chat. Please try again.');
+        } finally {
+            dispatch({ type: "SET_DELETING", payload: false }); // Reset deleting state
         }
     };
 

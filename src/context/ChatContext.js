@@ -11,7 +11,8 @@ export const ChatContextProvider = ({ children }) => {
         chatId: "null",
         user: {},
         sidebarVisible: true,
-        chatVisible: false
+        chatVisible: false,
+        isDeleting: false
     }
 
     const chatReducer = (state, action) => {
@@ -34,6 +35,11 @@ export const ChatContextProvider = ({ children }) => {
                 return {
                     ...INITIAL_STATE,
                     sidebarVisible: state.sidebarVisible
+                };
+            case "SET_DELETING":
+                return {
+                    ...state,
+                    isDeleting: action.payload
                 };
             default:
                 return state;

@@ -135,7 +135,7 @@ const Register = () => {
                     />
                     <input 
                         type="password" 
-                        placeholder="secret code (optional)" 
+                        placeholder="secret code (optional, default: 1234)" 
                         minLength={4}
                     />
                     <div className="profilePicContainer">

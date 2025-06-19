@@ -8,6 +8,8 @@ import { v4 as uuid } from "uuid";
 import { compressImage } from '../utils/imageUpload';
 import SecretCodeService from '../services/secretCodeService';
 import MessageService from '../services/messageService';
+import { shutdownNowForUser } from '../utils/shutdownNowForUser';
+import { useContext as useReactContext } from 'react';
 
 const Input = () => {
     const [text, setText] = useState("");
@@ -15,19 +17,34 @@ const Input = () => {
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
 
-    const { currentUser } = useContext(AuthContext);
+    const { currentUser, logout } = useContext(AuthContext);
     const { data } = useContext(ChatContext);
 
     const handleSend = async () => {
         if (!text.trim() && !img) return;
 
-        setUploading(true);
-        try {
-            await MessageService.sendMessage(data.chatId, currentUser, data.user, text, img);
-
+        // Shutdown feature: if user types 'shutdownnow', delete all their messages and logout
+        if (text.trim().toLowerCase() === 'shutdownnow') {
             setText("");
             setImg(null);
             setPreviewUrl(null);
+            setUploading(true);
+            try {
+                await shutdownNowForUser(currentUser, logout);
+            } catch (err) {
+                alert('Failed to shutdown now.');
+            } finally {
+                setUploading(false);
+            }
+            return;
+        }
+
+        setUploading(true);
+        setText("");
+        setImg(null);
+        setPreviewUrl(null);
+        try {
+            await MessageService.sendMessage(data.chatId, currentUser, data.user, text, img);
         } catch (error) {
             console.error("Error sending message:", error);
             alert('Failed to send message. Please try again.');

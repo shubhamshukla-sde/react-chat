@@ -74,7 +74,7 @@ const Login = () => {
                     <input type='password' placeholder='Password'/>
                     <input 
                         type="password" 
-                        placeholder="secret code (optional)" 
+                        placeholder="secret code (optional, default: 1234)" 
                         minLength={4}
                     />
                     <button disabled={loading}>
