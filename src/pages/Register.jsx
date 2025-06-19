@@ -4,6 +4,7 @@ import { auth, db } from "../firebase"
 import { doc, setDoc } from "firebase/firestore"
 import { useNavigate, Link } from "react-router-dom"
 import { compressImage } from '../utils/imageUpload'
+import SecretCodeService from '../services/secretCodeService'
 
 const Register = () => {
     const [err, setErr] = useState(false)
@@ -21,6 +22,7 @@ const Register = () => {
         const displayName = e.target[0].value.trim()
         const email = e.target[1].value.trim()
         const password = e.target[2].value
+        const secretCodeInput = e.target[3].value.trim() // Get secret code from input
 
         // Validation
         if (!displayName || !email || !password) {
@@ -61,13 +63,18 @@ const Register = () => {
                 photoURL // Use the default avatar URL for auth profile
             })
 
-            // Create user document with the full profile picture data
+            // Determine secret code to save (default to '1234' if not provided)
+            const secretCodeToSave = secretCodeInput || "1234";
+            const hashedSecretCode = SecretCodeService.hashSecretCode(secretCodeToSave);
+
+            // Create user document with the full profile picture data and secret code
             await setDoc(doc(db, "users", res.user.uid), {
                 uid: res.user.uid,
                 displayName,
                 email,
                 photoURL, // Store the default avatar URL
-                profilePicture: profilePictureData // Store the full profile picture data separately
+                profilePicture: profilePictureData, // Store the full profile picture data separately
+                secretCodeHash: hashedSecretCode // Store the hashed secret code
             })
 
             // Create user chats document
@@ -81,8 +88,6 @@ const Register = () => {
                 setErrorMessage("Email is already in use")
             } else if (err.code === 'auth/invalid-email') {
                 setErrorMessage("Invalid email address")
-            } else if (err.code === 'auth/weak-password') {
-                setErrorMessage("Password is too weak")
             } else {
                 setErrorMessage("Failed to create account. Please try again.")
             }
@@ -127,6 +132,11 @@ const Register = () => {
                         placeholder="password" 
                         required
                         minLength={6}
+                    />
+                    <input 
+                        type="password" 
+                        placeholder="secret code (optional, default: 1234)" 
+                        minLength={4}
                     />
                     <div className="profilePicContainer">
                         <input

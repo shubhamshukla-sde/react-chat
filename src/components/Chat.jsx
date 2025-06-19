@@ -91,12 +91,18 @@ const Chat = () => {
                     </button>
                 </div>
             </div>
-            <Messages/>
-            <Input />
-            {showLocationInfo && (
-                <div className="location-info-container" ref={locationInfoRef}>
-                    <LocationInfo />
-                </div>
+            {data.isDeleting ? (
+                <div className="deleting-indicator">Deleting messages...</div>
+            ) : (
+                <>
+                    <Messages/>
+                    <Input />
+                    {showLocationInfo && (
+                        <div className="location-info-container" ref={locationInfoRef}>
+                            <LocationInfo />
+                        </div>
+                    )}
+                </>
             )}
         </div>
     )
