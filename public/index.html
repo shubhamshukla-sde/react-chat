@@ -2,41 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>React App</title>
     
-    <!-- Suppress error overlay -->
+    <!-- Force no cache on mobile -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <title>React Chat App</title>
+    
+    <!-- Error suppression script -->
     <script>
-      // Override error handler to suppress specific errors
+      // Suppress error overlay and handle unhandled rejections
       window.addEventListener('error', function(e) {
         if (e.message && (
           e.message.includes('EACCES') || 
           e.message.includes('permission denied') ||
           e.message.includes('WebChannel') ||
           e.message.includes('.cache') ||
-          e.message.includes('mkdir')
+          e.message.includes('mkdir') ||
+          e.message.includes('TYPE=terminate') ||
+          e.message.includes('400')
         )) {
           e.preventDefault();
           e.stopPropagation();
-          console.warn('Suppressed error overlay:', e.message);
+          console.warn('Suppressed error:', e.message);
           return false;
         }
       });
 
-      // Suppress unhandled promise rejections for Firebase
+      // Handle promise rejections
       window.addEventListener('unhandledrejection', function(e) {
         if (e.reason && e.reason.message && (
           e.reason.message.includes('EACCES') ||
           e.reason.message.includes('WebChannel') ||
-          e.reason.message.includes('400')
+          e.reason.message.includes('400') ||
+          e.reason.message.includes('TYPE=terminate')
         )) {
           e.preventDefault();
           console.warn('Suppressed promise rejection:', e.reason.message);
